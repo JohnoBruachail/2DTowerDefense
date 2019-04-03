@@ -9,10 +9,12 @@ public class ShootEnemies : MonoBehaviour
     public List<GameObject> enemiesInRange;
     private float lastShotTime;
     private Monster monster;
+    private GameManagerBehaviour gameManager;
 
     // Use this for initialization
     void Start()
     {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManagerBehaviour>();
         enemiesInRange = new List<GameObject>();
         lastShotTime = Time.time;
         monster = gameObject.GetComponentInChildren<Monster>();
@@ -37,7 +39,7 @@ public class ShootEnemies : MonoBehaviour
         }
         if (target != null){
 
-            if (Time.time - lastShotTime > monster.CurrentType.powerTier[monster.currentPowerTier].fireRate)
+            if (Time.time - lastShotTime > (monster.CurrentType.powerTier[monster.currentPowerTier].fireRate / gameManager.speedModifier))
             {
                 Shoot(target.GetComponent<Collider2D>());
                 lastShotTime = Time.time;

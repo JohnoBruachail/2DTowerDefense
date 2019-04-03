@@ -11,13 +11,15 @@ public class HeroBehaviour : MonoBehaviour
     private float lastWaypointSwitchTime;
     public float normalSpeed = 1.0f;
     public float currentSpeed = 1.0f;
-    public bool poisoned;
-    public bool frozen;
+    public bool isPoisoned;
+    public bool isFrozen;
     public int poisonedTimer = 0;
 
     //Healthbar Info
     public float maxHealth;
     public float currentHealth;
+    public float damageModifier;
+    public float armor;
     private float originalScale;
     GameObject healthBar;
     private GameManagerBehaviour gameManager;
@@ -83,7 +85,7 @@ public class HeroBehaviour : MonoBehaviour
         currentTimeOnPath = Time.time - lastWaypointSwitchTime;
         if(alive){
 
-            if(frozen){
+            if(isFrozen){
                 
                 lastWaypointSwitchTime += Time.deltaTime;
                 characterDown.GetComponent<Animator>().enabled=false;
@@ -92,7 +94,7 @@ public class HeroBehaviour : MonoBehaviour
                 characterUp.GetComponent<Animator>().enabled=false;
                 
             }
-            if(!frozen){
+            if(!isFrozen){
                 //t += Time.deltaTime;
                 pathLength = Vector2.Distance(startPosition, endPosition);
                 totalTimeForPath = pathLength / currentSpeed;
@@ -127,16 +129,17 @@ public class HeroBehaviour : MonoBehaviour
 
     public void damage(int damage, int damageType){
 
-        currentHealth -= Mathf.Max(damage, 0);
+        damageModifier = 100 / (100 + armor);
+        currentHealth -= Mathf.Max(damage, 0) * damageModifier;
         tmpScale.x = currentHealth / maxHealth * originalScale;
         healthBar.transform.localScale = tmpScale;
 
         if(damageType == 2){
-            frozen = true;
+            isFrozen = true;
             Invoke("Thaw", 1);
         }
         else if(damageType == 3){
-            poisoned = true;
+            isPoisoned = true;
         }
 
         if (alive && currentHealth <= 0){
@@ -160,17 +163,17 @@ public class HeroBehaviour : MonoBehaviour
 
     private void HealthUpdate(){
 
-        if(poisoned == true){
+        if(isPoisoned == true){
             poisonedTimer = 0;
             Debug.Log("Poison Applied");
             InvokeRepeating("ApplyPoison", 1f, 1f);
-            poisoned = false;
+            isPoisoned = false;
         }
     }
 
     private void ApplyPoison(){
         Debug.Log("Applying Poison Damage");
-        currentHealth -= Mathf.Max(2, 0);
+        currentHealth -= Mathf.Max(5, 0);
         tmpScale.x = currentHealth / maxHealth * originalScale;
         healthBar.transform.localScale = tmpScale;
 
@@ -183,7 +186,7 @@ public class HeroBehaviour : MonoBehaviour
     private void Thaw(){
         Debug.Log("Frozen Removed");
         CancelInvoke("Thaw");
-        frozen = false;
+        isFrozen = false;
             characterDown.GetComponent<Animator>().enabled=true;
             characterLeft.GetComponent<Animator>().enabled=true;
             characterRight.GetComponent<Animator>().enabled=true;

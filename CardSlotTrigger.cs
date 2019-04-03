@@ -35,8 +35,4 @@ public class CardSlotTrigger : MonoBehaviour
             this.GetComponent<SpriteRenderer>().color = normal;
         }
     }
-
-    void takeCard(){
-        
-    }
 }

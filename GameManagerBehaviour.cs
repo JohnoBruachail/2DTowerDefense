@@ -5,7 +5,11 @@ using UnityEngine.UI;
 
 public class GameManagerBehaviour : MonoBehaviour
 {
+    public int goldModifier;
+    public int speedModifier;
+    public int rangeModifier;
     public GameObject[] cardSlots;
+    public GameObject dropZone;
     public List<Spawner> spawners;
     public Text goldLabel;
     public Text bankedGoldLabel;
@@ -111,6 +115,10 @@ public class GameManagerBehaviour : MonoBehaviour
         difficulty = 0;
         Wave = 0;
         Health = 5;
+
+        goldModifier = 1;
+        speedModifier = 1;
+        rangeModifier = 1;
     }
 
     // Update is called once per frame
@@ -136,18 +144,37 @@ public class GameManagerBehaviour : MonoBehaviour
     //once a spawner has completed its ful spawn it wont go again till next wave is triggered
     //this is done once all spaweners are done spawning. 
 
-    public void cardInHand(bool cardInHand){
+    public void cardInHand(bool cardInHand, int cardType){
         if(cardInHand){
-            for(int x = 0; x < cardSlots.Length; x++){
-                touchCamera.enabled = false;
-                cardSlots[x].SetActive(true);
+            if(cardType == 0){
+                for(int x = 0; x < cardSlots.Length; x++){
+                    touchCamera.enabled = false;
+                    cardSlots[x].SetActive(true);
+                }
             }
+            else{
+                dropZone.SetActive(true);
+            }
+            
         }else{
             for(int x = 0; x < cardSlots.Length; x++){
                 touchCamera.enabled = true;
                 cardSlots[x].SetActive(false);
             }
         }
+    }
+
+    public void activateBoostCard(int cardFace){
+        if(cardFace == 6){
+            Debug.Log("Tower Speed Booster activated");
+            speedModifier = 2;
+            Invoke("normaliseSpeed", 10);
+        }
+    }
+
+    public void normaliseSpeed(){
+        Debug.Log("Tower Speed Booster deactivated");
+        speedModifier = 1;
     }
 
     public void UpdateWave(){

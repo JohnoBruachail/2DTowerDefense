@@ -7,32 +7,38 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     Transform handPanel = null;
     bool inCardSlot;
-    bool blockRaycasts;
+    bool inDropZone;
     private Tower tower;
     private GameManagerBehaviour gameManager;
     public AudioClip cardPickup;
     public AudioClip cardDrop;
     AudioSource audio;
+    int cardFace;
+    int cardType;
 
     void Start(){
         gameManager = GameObject.Find("GameManager").GetComponent<GameManagerBehaviour>();
         audio = GetComponent<AudioSource>();
-        blockRaycasts = GetComponent<CanvasGroup>().blocksRaycasts;
     }
 
     public void OnBeginDrag(PointerEventData pEventData){
+
+        cardFace = this.transform.GetComponent<Card>().getFace();
+        cardType = this.transform.GetComponent<Card>().getType();
         //Debug.Log("OnBeginDrag");
 
         audio.PlayOneShot(cardPickup);
 
-        gameManager.cardInHand(true);
+        gameManager.cardInHand(true, cardType);
 
         handPanel = this.transform.parent;
         this.transform.SetParent(this.transform.parent.parent);
         this.transform.localScale = new Vector3(2f, 2f, 1);
 
-        GetComponent<Collider2D>().enabled = true;
-        blockRaycasts = false;
+        if(cardType == 0){
+            GetComponent<Collider2D>().enabled = true;
+        }
+        GetComponent<CanvasGroup>().blocksRaycasts = false;
     }
     public void OnDrag(PointerEventData pEventData){
         //Debug.Log("OnDrag");
@@ -47,29 +53,29 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
         audio.PlayOneShot(cardDrop);
 
-        gameManager.cardInHand(false);
+        gameManager.cardInHand(false, 0);
 
         //if the card is hovering over a part of the map you can place a tower then highlight it.
         this.transform.localScale = new Vector3(1, 1, 1);
-        blockRaycasts = true;
+        GetComponent<CanvasGroup>().blocksRaycasts = true;
         //Debug.Log("inCardSlot: " + inCardSlot);
         //this will be triggered if the object doesnt hit a collder
-        if(inCardSlot){
-            //THIS IS THE TRIGGER TO DESTROY THIS CARD AND UPGRADE THE TOWER APPROPRIATELY;
-            int cardType = this.transform.GetComponent<Card>().getType();
-            if(tower.build(cardType)){
-                Destroy(gameObject);
+        if(cardType == 0 || cardType == 1){
+            if(inCardSlot){
+                //THIS IS THE TRIGGER TO DESTROY THIS CARD AND UPGRADE THE TOWER APPROPRIATELY;
+                if(tower.build(cardFace)){
+                    Destroy(gameObject);
+                }
+                else{
+                    GetComponent<Collider2D>().enabled = false;
+                    this.transform.SetParent(handPanel);
+                }
             }
             else{
                 GetComponent<Collider2D>().enabled = false;
-            this.transform.SetParent(handPanel);
+                this.transform.SetParent(handPanel);  
             }
         }
-        else{
-            GetComponent<Collider2D>().enabled = false;
-            this.transform.SetParent(handPanel);  
-        }
-        
     }
 
     void OnTriggerEnter2D(Collider2D col){
