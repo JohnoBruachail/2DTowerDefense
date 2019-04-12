@@ -93,20 +93,20 @@ public class Monster : MonoBehaviour
 
     }
 
-    public void setType(int set){
+    public void SetType(int set){
         Debug.Log("Change to type: " + set);
         CurrentType = types[set];
     }
 
-    public int getMonsterType(){
+    public int GetMonsterType(){
         return types.IndexOf(currentType);
     }
 
-    public int getMonsterRange(){
+    public int GetMonsterRange(){
         return types[types.IndexOf(currentType)].powerTier[currentPowerTier].range;
     }
 
-    public bool increasePowerTier()
+    public bool IncreasePowerTier()
     {
         if(currentPowerTier < CurrentType.powerTier.Length)
         {
@@ -118,7 +118,7 @@ public class Monster : MonoBehaviour
         }
     }
 
-    public bool increaseElementTier()
+    public bool IncreaseElementTier()
     {
         if(currentElementTier < CurrentType.elementTier.Length)
         {

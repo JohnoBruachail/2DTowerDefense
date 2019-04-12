@@ -58,12 +58,12 @@ public class ShootEnemies : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.gameObject.tag.Equals("Enemy"))
+        if (other.gameObject.tag.Equals("EnemyTargetingCollider"))
         {
             //add the enemy to the enemyinrange list as a potential target.
-            enemiesInRange.Add(other.gameObject);
+            enemiesInRange.Add(other.gameObject.transform.parent.gameObject);
             //take the enemys enemydestructioindelegate method and assign it this classes onEnemyDestroy method
-            EnemyDestructionDelegate del = other.gameObject.GetComponent<EnemyDestructionDelegate>();
+            EnemyDestructionDelegate del = other.gameObject.transform.parent.gameObject.GetComponent<EnemyDestructionDelegate>();
             del.enemyDelegate += OnEnemyDestroy;
             //Upon destruction of a game object, Unity calls this method automatically, and it checks whether the 
             //delegate is not null. In that case, you call it with the gameObject as a parameter. This lets all 
@@ -76,10 +76,10 @@ public class ShootEnemies : MonoBehaviour
 
     void OnTriggerExit2D(Collider2D other)
     {
-        if (other.gameObject.tag.Equals("Enemy"))
+        if (other.gameObject.tag.Equals("EnemyTargetingCollider"))
         {
-            enemiesInRange.Remove(other.gameObject);
-            EnemyDestructionDelegate del = other.gameObject.GetComponent<EnemyDestructionDelegate>();
+            enemiesInRange.Remove(other.gameObject.transform.parent.gameObject);
+            EnemyDestructionDelegate del = other.gameObject.transform.parent.gameObject.GetComponent<EnemyDestructionDelegate>();
             del.enemyDelegate -= OnEnemyDestroy;
         }
     }

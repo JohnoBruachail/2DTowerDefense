@@ -58,7 +58,7 @@ public class BulletBehavior : MonoBehaviour
         {
             if (target != null)
             {
-                targetScript.damage(damage, elementType);
+                targetScript.Damage(damage, elementType);
             }
             Destroy(gameObject);
         }

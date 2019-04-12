@@ -19,7 +19,7 @@ public class DropZone : MonoBehaviour, IPointerEnterHandler, IDropHandler, IPoin
 
         Card card = pEventData.pointerDrag.GetComponent<Card>();
         
-        gameManager.activateBoostCard(card.getFace());
+        gameManager.ActivateCard(card.GetFace());
         Destroy(card.gameObject);
         gameObject.SetActive(false);
     }

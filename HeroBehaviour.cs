@@ -10,9 +10,10 @@ public class HeroBehaviour : MonoBehaviour
     private int currentWaypoint = 0;
     private float lastWaypointSwitchTime;
     public float normalSpeed = 1.0f;
-    public float currentSpeed = 1.0f;
+    public float slowSpeed = 2.0f;
     public bool isPoisoned;
     public bool isFrozen;
+    public bool isSlowed;
     public int poisonedTimer = 0;
 
     //Healthbar Info
@@ -22,6 +23,7 @@ public class HeroBehaviour : MonoBehaviour
     public float armor;
     private float originalScale;
     GameObject healthBar;
+    GameObject healthBarBackground;
     private GameManagerBehaviour gameManager;
     Vector3 tmpScale;
 
@@ -34,9 +36,6 @@ public class HeroBehaviour : MonoBehaviour
     //walkingRight
     //Dead
 
-
-
-
     public GameObject teleportAnimationObject;
     private GameObject characterUp;
     private GameObject characterRight;
@@ -45,7 +44,7 @@ public class HeroBehaviour : MonoBehaviour
     AudioSource audioSource;
     Vector3 startPosition;
     Vector3 endPosition;
-    float pathLength;
+    float pathDistance;
     float totalTimeForPath;
     float currentTimeOnPath;
 
@@ -55,7 +54,12 @@ public class HeroBehaviour : MonoBehaviour
 
         lastWaypointSwitchTime = Time.time;
 
+        startPosition = waypoints[currentWaypoint].transform.position;
+        endPosition = waypoints[currentWaypoint + 1].transform.position;
+        pathDistance = Vector2.Distance(startPosition, endPosition);
+
         healthBar = this.transform.Find("HealthBar").gameObject;
+        healthBarBackground = this.transform.Find("HealthBarBackground").gameObject;
         gameManager = GameObject.Find("GameManager").GetComponent<GameManagerBehaviour>();
 
         originalScale = healthBar.transform.localScale.x;
@@ -67,48 +71,50 @@ public class HeroBehaviour : MonoBehaviour
         characterLeft = this.transform.Find("MaleCharacterLeft").gameObject;
 
         audioSource = this.GetComponent<AudioSource>();
-
     }
 
     // Update is called once per frame
     void Update()
     {
-        HealthUpdate();
+        UpdateHealth();
+        UpdateMovement(); 
+    }
 
-        startPosition = waypoints[currentWaypoint].transform.position;
-        endPosition = waypoints[currentWaypoint + 1].transform.position;
+    void UpdateMovement(){
 
+        //takes the start and end points of the characters current path.
+        
         //Calculation used to alter speed also repositions the character.
+        //could redesign to teleport or freeze character in place for a few seconds.
 
-        //could redesign or freeze character in place for a few seconds.
-
-        currentTimeOnPath = Time.time - lastWaypointSwitchTime;
         if(alive){
 
-            if(isFrozen){
-                
-                lastWaypointSwitchTime += Time.deltaTime;
-                characterDown.GetComponent<Animator>().enabled=false;
-                characterLeft.GetComponent<Animator>().enabled=false;
-                characterRight.GetComponent<Animator>().enabled=false;
-                characterUp.GetComponent<Animator>().enabled=false;
-                
-            }
-            if(!isFrozen){
-                //t += Time.deltaTime;
-                pathLength = Vector2.Distance(startPosition, endPosition);
-                totalTimeForPath = pathLength / currentSpeed;
+            if(!isSlowed && !isFrozen){
+
+                totalTimeForPath = pathDistance / normalSpeed;
                 currentTimeOnPath = Time.time - lastWaypointSwitchTime;
                 gameObject.transform.position = Vector2.Lerp(startPosition, endPosition, currentTimeOnPath / totalTimeForPath);
             }
+            else if(isSlowed){
 
+                totalTimeForPath = pathDistance / slowSpeed;
+                currentTimeOnPath = Time.time - lastWaypointSwitchTime;
+                gameObject.transform.position = Vector2.Lerp(startPosition, endPosition, currentTimeOnPath / totalTimeForPath);
+            }
+            if(isFrozen){
+                
+                lastWaypointSwitchTime += Time.deltaTime;
+            }
             if (gameObject.transform.position.Equals(endPosition)){
                 //if we've not reached the end of the road yet
                 if (currentWaypoint < waypoints.Length - 2)
                 {
                     // Switch to next waypoint
                     currentWaypoint++;
+                    startPosition = waypoints[currentWaypoint].transform.position;
+                    endPosition = waypoints[currentWaypoint + 1].transform.position;
                     lastWaypointSwitchTime = Time.time;
+                    pathDistance = Vector2.Distance(startPosition, endPosition);
 
                     RotateIntoMoveDirection();
                 }
@@ -125,18 +131,58 @@ public class HeroBehaviour : MonoBehaviour
                 }
             }
         }
+
     }
 
-    public void damage(int damage, int damageType){
+    void OnMouseUp()
+    {
+        if(gameManager.spellActive != 0){
+            if(gameManager.spellActive == 1){
+                ReduceArmor();
+                gameManager.spellAnimator.spellAnimations[0].SetActive(false);
+                gameManager.spellAnimator.spellAnimations[0].GetComponent<Animator>().SetTrigger("Cast");
+            }
+            else if(gameManager.spellActive == 2){
+                isFrozen = true;
+                Invoke("Thaw", 10);
+
+                characterDown.GetComponent<Animator>().enabled=false;
+                characterLeft.GetComponent<Animator>().enabled=false;
+                characterRight.GetComponent<Animator>().enabled=false;
+                characterUp.GetComponent<Animator>().enabled=false;
+
+                gameManager.spellAnimator.spellAnimations[1].SetActive(false);
+                gameManager.spellAnimator.spellAnimations[1].GetComponent<Animator>().SetTrigger("Cast");
+            }
+            else if(gameManager.spellActive == 3){
+
+                startPosition = waypoints[0].transform.position;
+                endPosition = waypoints[1].transform.position;
+                lastWaypointSwitchTime = Time.time;
+                pathDistance = Vector2.Distance(startPosition, endPosition);
+
+                gameManager.spellAnimator.spellAnimations[2].SetActive(false);
+                gameManager.spellAnimator.spellAnimations[2].GetComponent<Animator>().SetTrigger("Cast");
+            }
+            gameManager.spellActive = 0;
+        }
+    }
+
+    public void Damage(int damage, int damageType){
 
         damageModifier = 100 / (100 + armor);
         currentHealth -= Mathf.Max(damage, 0) * damageModifier;
         tmpScale.x = currentHealth / maxHealth * originalScale;
         healthBar.transform.localScale = tmpScale;
 
-        if(damageType == 2){
-            isFrozen = true;
-            Invoke("Thaw", 1);
+        if(damageType == 2 && !isSlowed){
+            isSlowed = true;
+
+            startPosition = transform.position;          
+            lastWaypointSwitchTime = Time.time;
+            pathDistance = Vector2.Distance(startPosition, endPosition);
+
+            Invoke("NormalSpeed", 5);
         }
         else if(damageType == 3){
             isPoisoned = true;
@@ -144,7 +190,7 @@ public class HeroBehaviour : MonoBehaviour
 
         if (alive && currentHealth <= 0){
 
-            gameManager.Gold += goldValue;
+            gameManager.Gold += goldValue * gameManager.goldModifier;
             AudioSource.PlayClipAtPoint(audioSource.clip, transform.position);
 
             characterUp.GetComponent<Animator>().SetTrigger("Kill");
@@ -153,6 +199,8 @@ public class HeroBehaviour : MonoBehaviour
             characterLeft.GetComponent<Animator>().SetTrigger("Kill");
             
             alive = false;
+            healthBar.SetActive(false);
+            healthBarBackground.SetActive(false);
             Invoke("Die", 5);
         }
     }
@@ -161,7 +209,7 @@ public class HeroBehaviour : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private void HealthUpdate(){
+    private void UpdateHealth(){
 
         if(isPoisoned == true){
             poisonedTimer = 0;
@@ -183,14 +231,31 @@ public class HeroBehaviour : MonoBehaviour
         poisonedTimer++;
     }
 
+    private void ReduceArmor(){
+        Debug.Log("Armor Reduced");
+        armor = 0;
+    }
+
+    private void NormalSpeed(){
+        Debug.Log("Slow Removed");
+        CancelInvoke("NormalSpeed");
+
+        startPosition = transform.position;          
+        lastWaypointSwitchTime = Time.time;
+        pathDistance = Vector2.Distance(startPosition, endPosition);
+
+        isSlowed = false;
+    }
+
     private void Thaw(){
         Debug.Log("Frozen Removed");
         CancelInvoke("Thaw");
         isFrozen = false;
-            characterDown.GetComponent<Animator>().enabled=true;
-            characterLeft.GetComponent<Animator>().enabled=true;
-            characterRight.GetComponent<Animator>().enabled=true;
-            characterUp.GetComponent<Animator>().enabled=true;
+
+        characterDown.GetComponent<Animator>().enabled=true;
+        characterLeft.GetComponent<Animator>().enabled=true;
+        characterRight.GetComponent<Animator>().enabled=true;
+        characterUp.GetComponent<Animator>().enabled=true;
     }
 
     //how character is rotated after hitting a waypoint

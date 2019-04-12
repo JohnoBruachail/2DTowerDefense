@@ -16,15 +16,20 @@ public class BuyCard : MonoBehaviour
         audio = gameObject.GetComponent<AudioSource>();
     }
 
-    public void buy(){
+    public void Buy(){
         if(EnoughGold()){
-            audio.PlayOneShot(drawCard);
             gameManager.Gold -= 100;
-            card = (Card) Instantiate(cardPrefab, transform.position, Quaternion.identity);
-            card.transform.SetParent(handPanel);
-            card.randomCard();
-            card.transform.localScale = new Vector3(1, 1, 1);
+            SpawnCard();
         }
+    }
+
+    public void SpawnCard(){
+
+        audio.PlayOneShot(drawCard);
+        card = (Card) Instantiate(cardPrefab, transform.position, Quaternion.identity);
+        card.transform.SetParent(handPanel);
+        card.RandomCard();
+        card.transform.localScale = new Vector3(1, 1, 1);
     }
 
     private bool EnoughGold()

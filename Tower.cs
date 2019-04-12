@@ -72,7 +72,7 @@ public class Tower : MonoBehaviour
         selectionCircle.SetActive(true);
         if(monster){
             rangeIndicator.SetActive(true);
-            rangeIndicator.transform.localScale = new Vector3(monster.getMonsterRange() + 5, monster.getMonsterRange() + 5, 0);
+            rangeIndicator.transform.localScale = new Vector3(monster.GetMonsterRange() + 5, monster.GetMonsterRange() + 5, 0);
 /*             
             if(monster.GetComponent<CircleCollider2D>().radius == 5){
                 rangeIndicator.transform.localScale = new Vector3(10, 10, 0);
@@ -85,7 +85,7 @@ public class Tower : MonoBehaviour
     }
 
     //build based on what card was just dropped into the tower slot by the player
-    public bool build(int cardType){
+    public bool Build(int cardType){
         Debug.Log("build using cardType: " + cardType);
 
         /*
@@ -100,14 +100,14 @@ public class Tower : MonoBehaviour
 
         //check what monster currently exists.
         //do what card wants based on current monster type.
-        currentMonsterType = monster.getMonsterType();
+        currentMonsterType = monster.GetMonsterType();
 
         switch (cardType){
         case 0:
             //Standard Monster
             if(currentMonsterType == 0 || currentMonsterType == 1 || currentMonsterType == 2 || currentMonsterType == 3){
                 Debug.Log("upgrade a standard monster");
-                if(monster.increasePowerTier()){
+                if(monster.IncreasePowerTier()){
                     powerStars[monster.currentPowerTier].SetActive(true);
                     audio.PlayOneShot(upgradeStandardMonster);
                     return true;
@@ -120,7 +120,7 @@ public class Tower : MonoBehaviour
                 Debug.Log("Build a standard monster");
                 powerStars[monster.currentPowerTier].SetActive(true);
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(0);
+                monster.GetComponent<Monster>().SetType(0);
                 audio.PlayOneShot(placeStandardMonster);
 
                 gameObject.GetComponent<SpriteRenderer>().enabled = false;
@@ -131,7 +131,7 @@ public class Tower : MonoBehaviour
         case 1:
             //Standard Speed
             if(currentMonsterType == 4 || currentMonsterType == 5 || currentMonsterType == 6 || currentMonsterType == 7){
-                if(monster.increasePowerTier()){
+                if(monster.IncreasePowerTier()){
                     powerStars[monster.currentPowerTier].SetActive(true);
                     audio.PlayOneShot(upgradeSpeedMonster);
                     return true;
@@ -143,7 +143,7 @@ public class Tower : MonoBehaviour
                 monster.powerType = "Speed";
                 powerStars[monster.currentPowerTier].SetActive(true);
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(4);
+                monster.GetComponent<Monster>().SetType(4);
                 audio.PlayOneShot(placeSpeedMonster);
 
                 gameObject.GetComponent<SpriteRenderer>().enabled = false;
@@ -154,7 +154,7 @@ public class Tower : MonoBehaviour
         case 2:
             //Standard Range
             if(currentMonsterType == 8 || currentMonsterType == 9 || currentMonsterType == 10 || currentMonsterType == 11){
-                if(monster.increasePowerTier()){
+                if(monster.IncreasePowerTier()){
                     powerStars[monster.currentPowerTier].SetActive(true);
                     audio.PlayOneShot(upgradeRangeMonster);
                     return true;
@@ -166,7 +166,7 @@ public class Tower : MonoBehaviour
                 monster.powerType = "Range";
                 powerStars[monster.currentPowerTier].SetActive(true);
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(8);
+                monster.GetComponent<Monster>().SetType(8);
                 audio.PlayOneShot(placeRangeMonster);
 
                 gameObject.GetComponent<SpriteRenderer>().enabled = false;
@@ -177,7 +177,7 @@ public class Tower : MonoBehaviour
         case 3:
             //Element Fire
             if(currentMonsterType == 1 || currentMonsterType == 5 || currentMonsterType == 9){
-                if(monster.increaseElementTier()){
+                if(monster.IncreaseElementTier()){
                     elementStars[monster.currentElementTier].SetActive(true);
                     elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = fire;
                     return true;
@@ -189,7 +189,7 @@ public class Tower : MonoBehaviour
                 
                 monster.elementType = "Fire";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(1);
+                monster.GetComponent<Monster>().SetType(1);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 Debug.Log("monsterelementtier: " + monster.currentElementTier);
@@ -204,7 +204,7 @@ public class Tower : MonoBehaviour
                 
                 monster.elementType = "Fire";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(5);
+                monster.GetComponent<Monster>().SetType(5);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = fire;
@@ -216,7 +216,7 @@ public class Tower : MonoBehaviour
                 
                 monster.elementType = "Fire";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(9);
+                monster.GetComponent<Monster>().SetType(9);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = fire;
@@ -229,7 +229,7 @@ public class Tower : MonoBehaviour
             case 4:
             //Element Ice
             if(currentMonsterType == 2 || currentMonsterType == 6 || currentMonsterType == 10){
-                if(monster.increaseElementTier()){
+                if(monster.IncreaseElementTier()){
                     elementStars[monster.currentElementTier].SetActive(true);
                     elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = ice;
                     return true;
@@ -241,7 +241,7 @@ public class Tower : MonoBehaviour
                 
                 monster.elementType = "Ice";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(2);
+                monster.GetComponent<Monster>().SetType(2);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = ice;
@@ -253,7 +253,7 @@ public class Tower : MonoBehaviour
 
                 monster.elementType = "Ice";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(6);
+                monster.GetComponent<Monster>().SetType(6);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = ice;
@@ -265,7 +265,7 @@ public class Tower : MonoBehaviour
 
                 monster.elementType = "Ice";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(10);
+                monster.GetComponent<Monster>().SetType(10);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = ice;
@@ -278,7 +278,7 @@ public class Tower : MonoBehaviour
             case 5:
             //Element Poison
             if(currentMonsterType == 3 || currentMonsterType == 7 || currentMonsterType == 11){
-                if(monster.increaseElementTier()){
+                if(monster.IncreaseElementTier()){
                     elementStars[monster.currentElementTier].SetActive(true);
                     elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = poison;
                     return true;
@@ -290,7 +290,7 @@ public class Tower : MonoBehaviour
 
                 monster.elementType = "Poison";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(3);
+                monster.GetComponent<Monster>().SetType(3);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = poison;
@@ -302,7 +302,7 @@ public class Tower : MonoBehaviour
 
                 monster.elementType = "Poison";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(7);
+                monster.GetComponent<Monster>().SetType(7);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = poison;
@@ -314,7 +314,7 @@ public class Tower : MonoBehaviour
 
                 monster.elementType = "Poison";
                 monster.gameObject.SetActive(true);
-                monster.GetComponent<Monster>().setType(11);
+                monster.GetComponent<Monster>().SetType(11);
                 audio.PlayOneShot(upgradeStandardMonster);
                 elementStars[monster.currentElementTier].SetActive(true);
                 elementStars[monster.currentElementTier].GetComponent<SpriteRenderer>().color = poison;

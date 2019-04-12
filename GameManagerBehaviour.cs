@@ -8,16 +8,35 @@ public class GameManagerBehaviour : MonoBehaviour
     public int goldModifier;
     public int speedModifier;
     public int rangeModifier;
-    public GameObject[] cardSlots;
-    public GameObject dropZone;
-    public List<Spawner> spawners;
-    public Text goldLabel;
-    public Text bankedGoldLabel;
     private int gold;
     private int bankedGold;
     private int nextBankGoldCost;
     public int difficulty;
+    public int spellActive;
+    private int wave;
+    private int health;
+
+    public bool gameOver = false;
+
+    public GameObject dropZone;
+    
+    public GameObject[] cardSlots;
+    public GameObject[] nextWaveLabels;
+    public GameObject[] healthIndicator;
+
+    public List<Spawner> spawners;
+
+    public Text healthLabel;
+    public Text goldLabel;
+    public Text waveLabel;
+    public Text bankedGoldLabel;
+
+    public SpellAnimation spellAnimator;
+
     public TouchCamera touchCamera;
+
+    public BuyCard buyCardButton;
+
     public int Gold
     {
         get
@@ -28,9 +47,14 @@ public class GameManagerBehaviour : MonoBehaviour
         {
             Debug.Log("updating gold value");
             gold = value;
-            goldLabel.GetComponent<Text>().text = "GOLD: " + gold;
+            if(goldModifier == 2){
+                goldLabel.GetComponent<Text>().text = "GOLD: " + gold + " x2";
+            }else{
+                goldLabel.GetComponent<Text>().text = "GOLD: " + gold;
+            }
         }
     }
+
     public int BankedGold
     {
         get
@@ -46,12 +70,6 @@ public class GameManagerBehaviour : MonoBehaviour
         }
     }
 
-    public Text waveLabel;
-    public GameObject[] nextWaveLabels;
-
-    public bool gameOver = false;
-
-    private int wave;
     public int Wave
     {
         get { return wave; }
@@ -68,11 +86,7 @@ public class GameManagerBehaviour : MonoBehaviour
             waveLabel.text = "WAVE: " + (wave + 1);
         }
     }
-
-    public Text healthLabel;
-    public GameObject[] healthIndicator;
-
-    private int health;
+ 
     public int Health
     {
         get { return health; }
@@ -144,9 +158,9 @@ public class GameManagerBehaviour : MonoBehaviour
     //once a spawner has completed its ful spawn it wont go again till next wave is triggered
     //this is done once all spaweners are done spawning. 
 
-    public void cardInHand(bool cardInHand, int cardType){
+    public void CardInHand(bool cardInHand, int cardType){
         if(cardInHand){
-            if(cardType == 0){
+            if(cardType >= 0 && cardType <= 1){
                 for(int x = 0; x < cardSlots.Length; x++){
                     touchCamera.enabled = false;
                     cardSlots[x].SetActive(true);
@@ -164,17 +178,55 @@ public class GameManagerBehaviour : MonoBehaviour
         }
     }
 
-    public void activateBoostCard(int cardFace){
+    public void ActivateCard(int cardFace){
         if(cardFace == 6){
             Debug.Log("Tower Speed Booster activated");
             speedModifier = 2;
-            Invoke("normaliseSpeed", 10);
+            Invoke("NormaliseSpeed", 10);
+        }
+        else if(cardFace == 7){
+            Debug.Log("Gold Booster activated");
+            goldModifier = 2;
+            goldLabel.GetComponent<Text>().text = "GOLD: " + gold + " x2";
+            Invoke("NormaliseGold", 10);
+        }
+        else if(cardFace == 8){
+            Debug.Log("Give 3 cards Booster activated");
+            GiveCard();
+            Invoke("giveCard", 0.3f);
+            Invoke("giveCard", 0.6f);
+        }
+        else if(cardFace == 9){
+            Debug.Log("Armor spell card activated");
+            spellActive = 1;
+            spellAnimator.ActivateAnimation(spellActive - 1);
+            //need to add some indication that the spell is now active in the players hand
+        }
+        else if(cardFace == 10){
+            Debug.Log("Freeze spell card activated");
+            spellActive = 2;
+            spellAnimator.ActivateAnimation(spellActive - 1);
+
+        }
+        else if(cardFace == 11){
+            Debug.Log("Teleport spell card activated");
+            spellActive = 3;
+            spellAnimator.ActivateAnimation(spellActive - 1);
         }
     }
 
-    public void normaliseSpeed(){
+    public void NormaliseSpeed(){
         Debug.Log("Tower Speed Booster deactivated");
         speedModifier = 1;
+    }
+
+    public void NormaliseGold(){
+        Debug.Log("gold Booster deactivated");
+        goldModifier = 1;
+        goldLabel.GetComponent<Text>().text = "GOLD: " + gold;
+    }
+    public void GiveCard(){
+        buyCardButton.SpawnCard();
     }
 
     public void UpdateWave(){

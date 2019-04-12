@@ -17,9 +17,9 @@ public class LevelSelectManager : MonoBehaviour
     void Start()
     {
         selectedLevel = 1;
-        buttonPreviousLevel.onClick.AddListener(() => {changeSelectedLevel(false);});
-        buttonNextLevel.onClick.AddListener(() => {changeSelectedLevel(true);});
-        buttonLoadLevel.onClick.AddListener(() => {loadLevel();});
+        buttonPreviousLevel.onClick.AddListener(() => {ChangeSelectedLevel(false);});
+        buttonNextLevel.onClick.AddListener(() => {ChangeSelectedLevel(true);});
+        buttonLoadLevel.onClick.AddListener(() => {LoadLevel();});
     }
     // Update is called once per frame
     void Update()
@@ -27,7 +27,7 @@ public class LevelSelectManager : MonoBehaviour
         
     }
 
-    public void changeSelectedLevel(bool cycleForward){
+    public void ChangeSelectedLevel(bool cycleForward){
         //cycleForward is true for cycle forward through levels and false to cycle backwards.
         //selected lvl cannot be 0 as thats the main menu
         //it has to cycle between 1 and 20 if their are 20 levels
@@ -48,7 +48,7 @@ public class LevelSelectManager : MonoBehaviour
         levelPreview.GetComponent<Image>().sprite = levelPreviews[selectedLevel-1];
     }
 
-    public void loadLevel(){
+    public void LoadLevel(){
         Debug.Log("load scene:" + selectedLevel);
         SceneManager.LoadScene(selectedLevel);
     }

@@ -29,10 +29,9 @@ public class Card : MonoBehaviour
         
     }
 
-    public void randomCard(){
+    public void RandomCard(){
         //pick a random card
-        face = Random.Range(0, 6);
-        face = 6;
+        face = Random.Range(0, 11);
         //type = Random.Range(0, types.Count);
         if(face >= 0 && face <= 2){
             type = 0;
@@ -43,7 +42,7 @@ public class Card : MonoBehaviour
         else if(face >= 6 && face <= 8){
             type = 2;
         }
-        else if(face >= 9 && face <= 1){
+        else if(face >= 9 && face <= 12){
             type = 3;
         }
         
@@ -51,18 +50,18 @@ public class Card : MonoBehaviour
         this.transform.localScale = new Vector3(1, 1, 1);
     }
 
-    public int getFace(){
+    public int GetFace(){
         return face;
     }
 
-    public void setFace(int newType){
+    public void SetFace(int newType){
         faces[face].visualization.SetActive(false);
         face = newType;
         faces[face].visualization.SetActive(false);
         this.transform.localScale = new Vector3(1, 1, 1);
     }
 
-    public int getType(){
+    public int GetType(){
         return type;
     }
 }
