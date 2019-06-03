@@ -5,9 +5,11 @@ public class TouchCamera : MonoBehaviour {
 	#region MapLimits
 
         public bool  limitMap = true;
-        public float limitX = 10f; //x limit of map
-        public float limitY = 10f; //y limit of map
-		public float limitZ = 5f; //z limit of map
+        public float limitX; //x limit of map
+        public float limitY; //y limit of map
+		public float limitZoomIn; //z limit of map
+		public float limitZoomOut; //z limit of map
+		float changedOrthographic;
 
 	#endregion
 
@@ -67,7 +69,11 @@ public class TouchCamera : MonoBehaviour {
 					transform.localRotation *= Quaternion.Euler(new Vector3(0, 0, Mathf.Asin(Mathf.Clamp((oldTouchVector.y * newTouchVector.x - oldTouchVector.x * newTouchVector.y) / oldTouchDistance / newTouchDistance, -1f, 1f)) / 0.0174532924f));
 				}
 				
-				GetComponent<Camera>().orthographicSize *= oldTouchDistance / newTouchDistance;
+				changedOrthographic = GetComponent<Camera>().orthographicSize * (oldTouchDistance / newTouchDistance);
+
+				GetComponent<Camera>().orthographicSize = Mathf.Clamp(changedOrthographic, limitZoomIn, limitZoomOut);
+				//GetComponent<Camera>().orthographicSize *= oldTouchDistance / newTouchDistance;
+
 				transform.position -= transform.TransformDirection((newTouchPositions[0] + newTouchPositions[1] - screen) * GetComponent<Camera>().orthographicSize / screen.y);
 
 				oldTouchPositions[0] = newTouchPositions[0];
@@ -76,10 +82,7 @@ public class TouchCamera : MonoBehaviour {
 				oldTouchDistance = newTouchDistance;
 			}
 		}
-
-		//transform.position = new Vector3(Mathf.Clamp(transform.position.x, -limitX, limitX), Mathf.Clamp(transform.position.y, -limitY, limitY), transform.position.z);
-		//transform.position = new Vector3(Mathf.Clamp(transform.position.x, -limitX, limitX), Mathf.Clamp(transform.position.y, -limitY, limitY), Mathf.Clamp(transform.position.z, -limitZ, limitZ));
+		
 		transform.position = new Vector3(Mathf.Clamp(transform.position.x, -limitX, limitX), Mathf.Clamp(transform.position.y, -limitY, limitY), transform.position.z);
-
 	}
 }

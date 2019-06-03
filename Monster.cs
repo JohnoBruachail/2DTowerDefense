@@ -44,6 +44,7 @@ public class Monster : MonoBehaviour
     public int currentPowerTier;
     //[HideInInspector]
     public int currentElementTier;
+    public CircleCollider2D rangeCollider;
     private MonsterType currentType;
     [HideInInspector]
     public string powerType;
@@ -94,7 +95,7 @@ public class Monster : MonoBehaviour
     }
 
     public void SetType(int set){
-        Debug.Log("Change to type: " + set);
+        //Debug.Log("Change to type: " + set);
         CurrentType = types[set];
     }
 
@@ -106,9 +107,15 @@ public class Monster : MonoBehaviour
         return types[types.IndexOf(currentType)].powerTier[currentPowerTier].range;
     }
 
+    public void UpdateMonsterRange(){
+        //when a new type is set this should update the colliders radius to the correct range
+        rangeCollider.radius = types[types.IndexOf(currentType)].powerTier[currentPowerTier].range;
+    }
+
     public bool IncreasePowerTier()
     {
-        if(currentPowerTier < CurrentType.powerTier.Length)
+        Debug.Log("currentPowerTier: " + currentPowerTier);
+        if(currentPowerTier < 2)
         {
             currentPowerTier++;
             return true;

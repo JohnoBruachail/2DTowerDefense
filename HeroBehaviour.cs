@@ -4,21 +4,26 @@ using System.Collections;
 public class HeroBehaviour : MonoBehaviour
 {
     public bool alive = true;
-    public int goldValue = 50;
+    public bool endOfPath;
+    public int manaValue = 50;
     [HideInInspector]
     public GameObject[] waypoints;
     private int currentWaypoint = 0;
     private float lastWaypointSwitchTime;
     public float normalSpeed = 1.0f;
-    public float slowSpeed = 2.0f;
+    public float slowSpeedModifier = 2.0f;
     public bool isPoisoned;
     public bool isFrozen;
     public bool isSlowed;
     public int poisonedTimer = 0;
 
+    private int poisonStack = 0;
+
     //Healthbar Info
     public float maxHealth;
     public float currentHealth;
+    public bool regensHealth;
+    public float healthRegen;
     public float damageModifier;
     public float armor;
     private float originalScale;
@@ -26,6 +31,10 @@ public class HeroBehaviour : MonoBehaviour
     GameObject healthBarBackground;
     private GameManagerBehaviour gameManager;
     Vector3 tmpScale;
+
+    Color32 normalHealthBarColor = new Color32(200,42,42,255);
+    Color32 frozenHealthBarColor = new Color32(42,42,200,255);
+    Color32 poisonedHealthBarColor = new Color32(42,200,42,255);
 
     private int state;
 
@@ -42,6 +51,7 @@ public class HeroBehaviour : MonoBehaviour
     private GameObject characterDown;
     private GameObject characterLeft;
     AudioSource audioSource;
+    public AudioClip explosion;
     Vector3 startPosition;
     Vector3 endPosition;
     float pathDistance;
@@ -71,12 +81,17 @@ public class HeroBehaviour : MonoBehaviour
         characterLeft = this.transform.Find("MaleCharacterLeft").gameObject;
 
         audioSource = this.GetComponent<AudioSource>();
+
+        if(regensHealth){
+            InvokeRepeating("HealthRegen", 1f, 1f);
+        }
+
+        RotateIntoMoveDirection();
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateHealth();
         UpdateMovement(); 
     }
 
@@ -97,7 +112,7 @@ public class HeroBehaviour : MonoBehaviour
             }
             else if(isSlowed){
 
-                totalTimeForPath = pathDistance / slowSpeed;
+                totalTimeForPath = pathDistance / slowSpeedModifier;
                 currentTimeOnPath = Time.time - lastWaypointSwitchTime;
                 gameObject.transform.position = Vector2.Lerp(startPosition, endPosition, currentTimeOnPath / totalTimeForPath);
             }
@@ -120,18 +135,31 @@ public class HeroBehaviour : MonoBehaviour
                 }
                 else
                 {
-                    //hero reaches the treasure.
+                    //starts a series of animations and effects to for the hero to steal the gold and teleport away after reaching the treasure.
+                    if(endOfPath == false){
+                        endOfPath = true;
+                        //hero reaches the treasure.
+                        characterUp.GetComponent<Animator>().SetTrigger("StealGold");
+                        characterRight.GetComponent<Animator>().SetTrigger("StealGold");
+                        characterDown.GetComponent<Animator>().SetTrigger("StealGold");
+                        characterLeft.GetComponent<Animator>().SetTrigger("StealGold");
 
-                    teleportAnimationObject.SetActive(true);
-                    AudioSource.PlayClipAtPoint(audioSource.clip, transform.position);
-
-                    //GameManagerBehavior gameManager = GameObject.Find("GameManager").GetComponent<GameManagerBehavior>();
-                    gameManager.Health -= 1;
-                    
+                        Invoke("StealTreasure", 0.5f);
+                    }
                 }
             }
         }
+    }
 
+    void StealTreasure(){
+        //AudioSource.PlayClipAtPoint(audioSource.clip, transform.position);
+        audioSource.PlayOneShot(explosion);
+        gameManager.Treasure -= 50;
+
+        teleportAnimationObject.GetComponent<Animator>().SetTrigger("GoldStolen");
+
+        Invoke("Die", 1.0f);
+        //I wish for the character to fade into trasnparency while the teleport is animated and then be deleted at the end.
     }
 
     void OnMouseUp()
@@ -144,6 +172,8 @@ public class HeroBehaviour : MonoBehaviour
             }
             else if(gameManager.spellActive == 2){
                 isFrozen = true;
+                healthBar.GetComponent<SpriteRenderer>().color = frozenHealthBarColor;
+
                 Invoke("Thaw", 10);
 
                 characterDown.GetComponent<Animator>().enabled=false;
@@ -168,15 +198,31 @@ public class HeroBehaviour : MonoBehaviour
         }
     }
 
+    public void HealthRegen(){
+
+        if(currentHealth < maxHealth){
+            currentHealth = currentHealth + healthRegen;
+
+            tmpScale.x = currentHealth / maxHealth * originalScale;
+            //the new healthbars transform local scale is applied to the health bar
+            healthBar.transform.localScale = tmpScale;
+        }
+    }
+
     public void Damage(int damage, int damageType){
 
+        //the damageModifier value removes the damage applied by the attack
         damageModifier = 100 / (100 + armor);
+        //damage is applied to the health of the character
         currentHealth -= Mathf.Max(damage, 0) * damageModifier;
+        //the healthbars original scale is multiplied by the original scale of the healthbar to scale it correctly.
         tmpScale.x = currentHealth / maxHealth * originalScale;
+        //the new healthbars transform local scale is applied to the health bar
         healthBar.transform.localScale = tmpScale;
 
         if(damageType == 2 && !isSlowed){
             isSlowed = true;
+
 
             startPosition = transform.position;          
             lastWaypointSwitchTime = Time.time;
@@ -185,13 +231,29 @@ public class HeroBehaviour : MonoBehaviour
             Invoke("NormalSpeed", 5);
         }
         else if(damageType == 3){
-            isPoisoned = true;
+
+            if(isPoisoned == false){
+                isPoisoned = true;
+                poisonedTimer = 0;
+                poisonStack = 1;
+                Debug.Log("Poison Applied");
+                InvokeRepeating("ApplyPoison", 1f, 1f);
+                healthBar.GetComponent<SpriteRenderer>().color = poisonedHealthBarColor;
+            }
+            else{
+                Debug.Log("Poison Stack increase and timer reset");
+                poisonedTimer = 0;
+                if(poisonStack < 10){
+                    poisonStack++;
+                }
+            }
         }
 
         if (alive && currentHealth <= 0){
 
-            gameManager.Gold += goldValue * gameManager.goldModifier;
-            AudioSource.PlayClipAtPoint(audioSource.clip, transform.position);
+            gameManager.Mana += manaValue * gameManager.manaModifier;
+            gameManager.heroesSlain++;
+            //AudioSource.PlayClipAtPoint(audioSource.clip, transform.position);
 
             characterUp.GetComponent<Animator>().SetTrigger("Kill");
             characterRight.GetComponent<Animator>().SetTrigger("Kill");
@@ -209,26 +271,24 @@ public class HeroBehaviour : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private void UpdateHealth(){
-
-        if(isPoisoned == true){
-            poisonedTimer = 0;
-            Debug.Log("Poison Applied");
-            InvokeRepeating("ApplyPoison", 1f, 1f);
-            isPoisoned = false;
-        }
-    }
+    //when hit with a poison attack isPoisoned becomes true.
+    //when first poisoned the apply poison method is invoked repeating.
+    //a stack of poison is then added to the character for each poison attack and reset the timer.
+    //each invoke will deal poison damage and increase the timer.
 
     private void ApplyPoison(){
-        Debug.Log("Applying Poison Damage");
-        currentHealth -= Mathf.Max(5, 0);
+        poisonedTimer++;
+        Debug.Log("Applying Poison Damage: " + Mathf.Max(poisonStack, 0) + "When stacks are: " + poisonStack);
+        currentHealth -= Mathf.Max(poisonStack, 0);
         tmpScale.x = currentHealth / maxHealth * originalScale;
         healthBar.transform.localScale = tmpScale;
 
-        if(poisonedTimer > 3){
+        if(poisonedTimer > 8){
+            Debug.Log("Poison Effect Expired");
             CancelInvoke("ApplyPoison");
+            isPoisoned = false;
+            healthBar.GetComponent<SpriteRenderer>().color = normalHealthBarColor;
         }
-        poisonedTimer++;
     }
 
     private void ReduceArmor(){
@@ -249,8 +309,9 @@ public class HeroBehaviour : MonoBehaviour
 
     private void Thaw(){
         Debug.Log("Frozen Removed");
-        CancelInvoke("Thaw");
+
         isFrozen = false;
+        healthBar.GetComponent<SpriteRenderer>().color = normalHealthBarColor;
 
         characterDown.GetComponent<Animator>().enabled=true;
         characterLeft.GetComponent<Animator>().enabled=true;
@@ -268,12 +329,12 @@ public class HeroBehaviour : MonoBehaviour
         float differenceX = Mathf.Abs(newStartPosition.x - newEndPosition.x);
         float differenceY = Mathf.Abs(newStartPosition.y - newEndPosition.y);
 
-        Debug.Log("******************************************************");
+        //Debug.Log("******************************************************");
 
-        Debug.Log("Start position x:" + newStartPosition.x + " End position x:" + newEndPosition.x);
-        Debug.Log("Start position y:" + newStartPosition.y + " End position y:" + newEndPosition.y);
+        //Debug.Log("Start position x:" + newStartPosition.x + " End position x:" + newEndPosition.x);
+        //Debug.Log("Start position y:" + newStartPosition.y + " End position y:" + newEndPosition.y);
 
-        Debug.Log("Difference in x:" + differenceX + " Difference in y:" + differenceY);
+        //Debug.Log("Difference in x:" + differenceX + " Difference in y:" + differenceY);
 
         
 
@@ -286,21 +347,21 @@ public class HeroBehaviour : MonoBehaviour
         //depending on direction and distance of next waypoint activate correctly orentated character sprite.
         if(differenceX > differenceY){
             if(newEndPosition.x < newStartPosition.x){
-                Debug.Log("Go Left");
+                //Debug.Log("Go Left");
                 characterLeft.SetActive(true);
             }
             else{
-                Debug.Log("Go Right");
+                //Debug.Log("Go Right");
                 characterRight.SetActive(true);
             }
         }
         else{
             if(newEndPosition.y < newStartPosition.y){
-                Debug.Log("Go Down");
+                //Debug.Log("Go Down");
                 characterDown.SetActive(true);
             }
             else{
-                Debug.Log("Go Up");
+                //Debug.Log("Go Up");
                 characterUp.SetActive(true);
             }
         }

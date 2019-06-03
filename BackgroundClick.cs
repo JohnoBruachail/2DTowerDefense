@@ -9,8 +9,8 @@ public class BackgroundClick : MonoBehaviour
     
     void OnMouseUp()
     {
-        Debug.Log("Background pressed");
+        //Debug.Log("Background pressed");
         //may need a circle to indicate this is selected
-        statsPanel.SelectTower();
+        //statsPanel.SelectTower();
     }
 }

@@ -5,68 +5,51 @@ using UnityEngine.UI;
 
 public class GameManagerBehaviour : MonoBehaviour
 {
-    public int goldModifier;
+    public int manaModifier;
     public int speedModifier;
     public int rangeModifier;
-    private int gold;
-    private int bankedGold;
-    private int nextBankGoldCost;
-    public int difficulty;
+    private int mana;
+    public int heroesSlain;
     public int spellActive;
     private int wave;
-    private int health;
-
+    private int treasure;
     public bool gameOver = false;
-
+    public int startingTreasure;
     public GameObject dropZone;
-    
     public GameObject[] cardSlots;
     public GameObject[] nextWaveLabels;
-    public GameObject[] healthIndicator;
-
+    public GameObject[] treasureIndicator;
     public List<Spawner> spawners;
-
-    public Text healthLabel;
-    public Text goldLabel;
-    public Text waveLabel;
-    public Text bankedGoldLabel;
-
+    public GameObject beginButton;
+    public GameObject timeLabel;
+    public GameObject manaLabel;
+    public GameObject treasureLabel;
+    public GameObject waveLabel;
+    public GameObject gameOverPanel;
+    public GameObject gameOverLabel;
+    public GameObject treasureResultsLabel;
+    public GameObject enemysKilledResultsLabel;
     public SpellAnimation spellAnimator;
-
     public TouchCamera touchCamera;
-
     public BuyCard buyCardButton;
 
-    public int Gold
+    public int Mana
     {
         get
         {
-            return gold;
+            return mana;
         }
         set
         {
-            Debug.Log("updating gold value");
-            gold = value;
-            if(goldModifier == 2){
-                goldLabel.GetComponent<Text>().text = "GOLD: " + gold + " x2";
+            //Debug.Log("updating mana value");
+            mana = value;
+            if(manaModifier == 2){
+                manaLabel.GetComponent<Text>().text = "Mana: " + mana + " x2";
+                manaLabel.GetComponent<Text>().color = new Color32(70,215,250,255);
             }else{
-                goldLabel.GetComponent<Text>().text = "GOLD: " + gold;
+                manaLabel.GetComponent<Text>().text = "Mana: " + mana;
+                manaLabel.GetComponent<Text>().color = new Color32(255,255,255,255);
             }
-        }
-    }
-
-    public int BankedGold
-    {
-        get
-        {
-            return bankedGold;
-        }
-        set
-        {
-            Debug.Log("updating banked gold value");
-            Gold -= value;
-            bankedGold += value;
-            bankedGoldLabel.GetComponent<Text>().text = "TREASURE: " + bankedGold;
         }
     }
 
@@ -83,68 +66,113 @@ public class GameManagerBehaviour : MonoBehaviour
                     nextWaveLabels[i].GetComponent<Animator>().SetTrigger("nextWave");
                 }
             }
-            waveLabel.text = "WAVE: " + (wave + 1);
+            waveLabel.GetComponent<Text>().text = "Wave: " + (wave + 1);
         }
     }
  
-    public int Health
+    public int Treasure
     {
-        get { return health; }
+        get { return treasure; }
         set
         {
 
-            if (value < health)
+            if (value < treasure)
             {
                 Camera.main.GetComponent<CameraShake>().Shake();
             }
 
-            health = value;
+            treasure = value;
+            treasureLabel.GetComponent<Text>().text = "Treasure: " + treasure;
 
-            if (health <= 0 && !gameOver)
+            if (treasure <= 0 && !gameOver)
             {
-                gameOver = true;
-                GameObject gameOverText = GameObject.FindGameObjectWithTag("GameOver");
-                gameOverText.GetComponent<Animator>().SetBool("gameOver", true);
+                GameOverLose();
             }
 
-            for (int i = 0; i < healthIndicator.Length; i++)
-            {
-                if (i < Health)
-                {
-                    healthIndicator[i].SetActive(true);
-                }
-                else
-                {
-                    healthIndicator[i].SetActive(false);
-                }
-            }
+
         }
     }
 
     // Use this for initialization
     void Start()
     {
-        Gold = 2000;
-        nextBankGoldCost = 250;
-        difficulty = 0;
-        Wave = 0;
-        Health = 5;
+        beginButton   = GameObject.Find("BeginButton");
+        timeLabel     = GameObject.Find("TimeLabel");
+        manaLabel     = GameObject.Find("ManaLabel");
+        treasureLabel = GameObject.Find("TreasureLabel");
+        waveLabel     = GameObject.Find("WaveLabel");
+        gameOverLabel = GameObject.Find("GameOverLabel");
 
-        goldModifier = 1;
+        treasureResultsLabel = GameObject.Find("TreasureResultsLabel");
+        enemysKilledResultsLabel = GameObject.Find("EnemysKilledResultsLabel");
+
+        gameOverPanel = GameObject.FindGameObjectWithTag("GameOverPanel");
+        gameOverPanel.SetActive(false);
+        
+        Mana        = 300;
+        Wave        = 0;
+        Treasure    = startingTreasure;
+        heroesSlain = 0;
+
+        manaModifier  = 1;
         speedModifier = 1;
         rangeModifier = 1;
+
+        FindAllCardSlots();
+
+        InvokeRepeating("UpdateTime",1.0f, 1.0f);
+        Time.timeScale = 0f;
     }
+
+    public void Begin(){
+        Time.timeScale = 1f;
+        beginButton.SetActive(false);
+    }
+
+    //certain events trigger an end game bool set to true. This will then determin if its a win or a loss
+    //either way a win condition menu like a pause menu should load, giving the player the option to restart the level, go to the main menu and
+    //display the score of the level.
 
     // Update is called once per frame
     void Update(){
         //need to add case if tower is deselected.
     }
 
+    void UpdateTime(){
+        timeLabel.GetComponent<Text>().text = "Time: " + Time.time.ToString("0");
+    }
 
-    //press bank gold button
-    //checks if enough gold is available to bank
-    //updates gold and banked gold
-    //wave spawn types are fixed
+    //Collects all the card slots in the scene and stores them in the array cardSlots
+    public void FindAllCardSlots(){
+        cardSlots = GameObject.FindGameObjectsWithTag("CardSlot");
+
+        foreach(GameObject card in cardSlots) {
+            card.SetActive(false);
+        }
+    }
+
+    //also change the text on game over panel to "you lose".
+    //play a negitive sound on losing.
+
+    public void GameOverWin(){
+        gameOver = true;
+        gameOverPanel.SetActive(true);
+        gameOverPanel.GetComponent<Animator>().SetBool("gameOver", true);
+        gameOverLabel.GetComponent<Text>().text = "Victory";
+        treasureResultsLabel.GetComponent<Text>().text = "Treasure Saved: " + treasure + "/500";
+        enemysKilledResultsLabel.GetComponent<Text>().text = "Heroes Slain: " + heroesSlain;
+    }
+
+    public void GameOverLose(){
+        Debug.Log("Games over man, games over");
+        gameOver = true;
+        gameOverPanel.SetActive(true);
+        gameOverPanel.GetComponent<Animator>().SetBool("gameOver", true);
+        gameOverLabel.GetComponent<Text>().text = "Defeat";
+        treasureResultsLabel.GetComponent<Text>().text = "Treasure Saved: " + treasure + "/500";
+        enemysKilledResultsLabel.GetComponent<Text>().text = "Heroes Slain: " + heroesSlain;
+    }
+
 
     //each wave is a collection of enemy types.
     //a wave will have an array and as the wave is deployed that enemy type will be spawned based 
@@ -160,10 +188,12 @@ public class GameManagerBehaviour : MonoBehaviour
 
     public void CardInHand(bool cardInHand, int cardType){
         if(cardInHand){
+            //disable the camera in any case, depending on card type either activate card slots or the background to catch the spell card.
+            touchCamera.enabled = false;
+
             if(cardType >= 0 && cardType <= 1){
-                for(int x = 0; x < cardSlots.Length; x++){
-                    touchCamera.enabled = false;
-                    cardSlots[x].SetActive(true);
+                foreach(GameObject card in cardSlots) {
+                    card.SetActive(true);
                 }
             }
             else{
@@ -171,59 +201,62 @@ public class GameManagerBehaviour : MonoBehaviour
             }
             
         }else{
-            for(int x = 0; x < cardSlots.Length; x++){
-                touchCamera.enabled = true;
-                cardSlots[x].SetActive(false);
+            touchCamera.enabled = true;
+            foreach(GameObject card in cardSlots) {
+                    card.SetActive(false);
             }
         }
     }
 
     public void ActivateCard(int cardFace){
         if(cardFace == 6){
-            Debug.Log("Tower Speed Booster activated");
+            //Debug.Log("Tower Speed Booster activated");
             speedModifier = 2;
             Invoke("NormaliseSpeed", 10);
         }
         else if(cardFace == 7){
-            Debug.Log("Gold Booster activated");
-            goldModifier = 2;
-            goldLabel.GetComponent<Text>().text = "GOLD: " + gold + " x2";
-            Invoke("NormaliseGold", 10);
+            //Debug.Log("Mana Booster activated");
+            manaModifier = 2;
+            manaLabel.GetComponent<Text>().text = "Mana: " + mana + " x2";
+            manaLabel.GetComponent<Text>().color = new Color32(70,215,250,255);
+            Invoke("NormaliseMana", 10);
         }
         else if(cardFace == 8){
-            Debug.Log("Give 3 cards Booster activated");
+            //Debug.Log("Give 3 cards Booster activated");
             GiveCard();
-            Invoke("giveCard", 0.3f);
-            Invoke("giveCard", 0.6f);
+            Invoke("GiveCard", 0.3f);
+            Invoke("GiveCard", 0.6f);
         }
         else if(cardFace == 9){
-            Debug.Log("Armor spell card activated");
+            //Debug.Log("Armor spell card activated");
             spellActive = 1;
             spellAnimator.ActivateAnimation(spellActive - 1);
             //need to add some indication that the spell is now active in the players hand
         }
         else if(cardFace == 10){
-            Debug.Log("Freeze spell card activated");
+            //Debug.Log("Freeze spell card activated");
             spellActive = 2;
             spellAnimator.ActivateAnimation(spellActive - 1);
 
         }
         else if(cardFace == 11){
-            Debug.Log("Teleport spell card activated");
+            //Debug.Log("Teleport spell card activated");
             spellActive = 3;
             spellAnimator.ActivateAnimation(spellActive - 1);
         }
+        touchCamera.enabled = true;
     }
 
     public void NormaliseSpeed(){
-        Debug.Log("Tower Speed Booster deactivated");
+        //Debug.Log("Tower Speed Booster deactivated");
         speedModifier = 1;
     }
 
-    public void NormaliseGold(){
-        Debug.Log("gold Booster deactivated");
-        goldModifier = 1;
-        goldLabel.GetComponent<Text>().text = "GOLD: " + gold;
+    public void NormaliseMana(){
+        //Debug.Log("mana Booster deactivated");
+        manaModifier = 1;
+        manaLabel.GetComponent<Text>().text = "Mana: " + mana;
+        manaLabel.GetComponent<Text>().color = new Color32(255,255,255,255);
     }
     public void GiveCard(){
         buyCardButton.SpawnCard();

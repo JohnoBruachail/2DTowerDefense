@@ -30,22 +30,24 @@ public class Card : MonoBehaviour
     }
 
     public void RandomCard(){
-        //pick a random card
-        face = Random.Range(0, 11);
-        //type = Random.Range(0, types.Count);
-        if(face >= 0 && face <= 2){
-            type = 0;
+
+        //pick a random type, we do this to even card selection distrubution by type
+        type = Random.Range(0, 3);
+
+        if(type == 0){
+            face = Random.Range(0, 3);
+
+        }else if(type == 1){
+            face = Random.Range(3, 6);
+
+        }else if(type == 2){
+            face = Random.Range(6, 9);
+
+        }else if(type == 3){
+            face = Random.Range(9, 13);
+
         }
-        else if(face >= 3 && face <= 5){
-            type = 1;
-        }
-        else if(face >= 6 && face <= 8){
-            type = 2;
-        }
-        else if(face >= 9 && face <= 12){
-            type = 3;
-        }
-        
+    
         faces[face].visualization.SetActive(true);
         this.transform.localScale = new Vector3(1, 1, 1);
     }

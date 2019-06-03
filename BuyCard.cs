@@ -17,8 +17,8 @@ public class BuyCard : MonoBehaviour
     }
 
     public void Buy(){
-        if(EnoughGold()){
-            gameManager.Gold -= 100;
+        if(EnoughMana()){
+            gameManager.Mana -= 100;
             SpawnCard();
         }
     }
@@ -32,9 +32,9 @@ public class BuyCard : MonoBehaviour
         card.transform.localScale = new Vector3(1, 1, 1);
     }
 
-    private bool EnoughGold()
+    private bool EnoughMana()
     {
-        if(gameManager.Gold >= 100){
+        if(gameManager.Mana >= 100){
             return true;
         }
         else{

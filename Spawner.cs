@@ -12,6 +12,7 @@ public class Spawner : MonoBehaviour
 {
     public GameObject[] waypoints;
     public GameObject[] EnemysList;
+    GameObject newEnemy;
     public Wave[] waves;
     public int timeBetweenWaves = 5;
 
@@ -27,18 +28,6 @@ public class Spawner : MonoBehaviour
         gameManager.spawners.Add(this);
     }
 
-    //currently
-    //checks the current wave every update
-    //if current wave is less the wavers length
-    
-    //wave is enemy type, a spawn interval and a max enemy number
-    //difficulty can have an additional #endregion
-
-    //wait wait wait.
-    //create a table of enemy types
-    //on each spawn roll a random number in a range to dictate enemy type.
-    //difficulty adds to this number range
-
     void Update()
     {
         //check if all waves have ended
@@ -52,30 +41,24 @@ public class Spawner : MonoBehaviour
             if (((enemiesSpawned == 0 && timeInterval > timeBetweenWaves) || timeInterval > spawnInterval) && enemiesSpawned < waves[currentWave].waveComposition.Length){
                 lastSpawnTime = Time.time;
 
-                if(waves[currentWave].waveComposition[enemiesSpawned] + gameManager.difficulty > EnemysList.Length){
-                    newEnemyType = EnemysList.Length;
-                }
-                else{
-                    newEnemyType = waves[currentWave].waveComposition[enemiesSpawned] + gameManager.difficulty;
-                }
+                newEnemyType = waves[currentWave].waveComposition[enemiesSpawned];
 
-                GameObject newEnemy = (GameObject)Instantiate(EnemysList[newEnemyType]);
+                //GameObject newEnemy = (GameObject)Instantiate(EnemysList[newEnemyType]);
+                newEnemy = Instantiate(EnemysList[newEnemyType], new Vector3(1000,1000,0), Quaternion.identity);
 
                 newEnemy.GetComponent<HeroBehaviour>().waypoints = waypoints;
                 enemiesSpawned++;
             }
             if (enemiesSpawned == waves[currentWave].waveComposition.Length && GameObject.FindGameObjectWithTag("Enemy") == null){
                 gameManager.Wave++;
-                gameManager.Gold = Mathf.RoundToInt(gameManager.Gold * 1.1f);
+                gameManager.Mana = Mathf.RoundToInt(gameManager.Mana * 1.1f);
                 enemiesSpawned = 0;
                 lastSpawnTime = Time.time;
             }
         }
         else
         {
-            gameManager.gameOver = true;
-            GameObject gameOverText = GameObject.FindGameObjectWithTag("GameWon");
-            gameOverText.GetComponent<Animator>().SetBool("gameOver", true);
+            gameManager.GameOverWin();
         }
     }
 
